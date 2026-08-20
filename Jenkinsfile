@@ -23,7 +23,7 @@ pipeline {
 
                 sh '''
                     echo "Jenkins build completed!" > /tmp/jenkins-build.txt
-                    echo "Build number: ${BUILD_NUMBER}" >> /tmp/jenkins-build.txt
+                    echo "Build number: ${BUILD_NUMBER}" >> /tmp/jenkins-build.txt #bvn
                     echo "Build time: $(date)" >> /tmp/jenkins-build.txt
                 '''
 
