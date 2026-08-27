@@ -1,33 +1,65 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'pujadocker1999/my-first-docker-image'
+    }
+
     stages {
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building application...'
-                sh 'echo Build completed'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                sh 'echo Tests passed'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
-
                 sh '''
-                    echo "Jenkins build completed!" > /tmp/jenkins-build.txt
-                    echo "Build number: ${BUILD_NUMBER}" >> /tmp/jenkins-build.txt #bvn
-                    echo "Build time: $(date)" >> /tmp/jenkins-build.txt
+                    docker build -t ${DOCKER_IMAGE}:latest .
                 '''
+            }
+        }
 
-                sh 'echo Deployment successful'
+        stage('Docker Login') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            -u "$DOCKER_USERNAME" \
+                            --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh '''
+                    docker push ${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                    docker rm -f hello-container || true
+
+                    docker run -d \
+                        --name hello-container \
+                        -p 8000:8000 \
+                        ${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Test Application') {
+            steps {
+                sh '''
+                    sleep 3
+                    curl -f http://localhost:8000
+                '''
             }
         }
     }
