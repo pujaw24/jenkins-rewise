@@ -1,16 +1,9 @@
-FROM ubuntu:latest
+FROM python:3.12-slim
 
-# Set the working directory in the image
 WORKDIR /app
 
-# Copy the files from the host file system to the image file system
-COPY . /app
+COPY app.py .
 
-# Install the necessary packages
-RUN apt-get update && apt-get install -y python3 python3-pip
+EXPOSE 8000
 
-# Set environment variables
-ENV NAME World
-
-# Run a command to start the application
-CMD ["python3", "app.py"]
+CMD ["python", "app.py"]
